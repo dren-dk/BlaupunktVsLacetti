@@ -1,0 +1,54 @@
+# Please make this file available to others
+# by sending it to <lirc@bartelmus.de>
+#
+# this config file was automatically generated
+# using lirc-0.8.7(default) on Mon Aug  8 13:18:46 2011
+#
+# contributed by Flemming Frandsen <dren.dk@gmail.com>
+#
+# brand: Blaupunkt
+# model no. of remote control: 5.104.020.000-002
+# devices being controlled by this remote: 2011 and newer, including:
+# Atlanta, Madrid, San Francisco 310 and Toronto 410 head units
+#
+
+begin remote
+
+  name  blaupunkt-2011
+  bits           16
+  flags SPACE_ENC|CONST_LENGTH
+  eps            30
+  aeps          100
+
+  header       9066  4370
+  one           612  1600
+  zero          612   523
+  ptrail        638
+  repeat       9067  2123
+  pre_data_bits   16
+  pre_data       0x41BE
+  gap          107115
+  toggle_bit_mask 0x0
+
+      begin codes
+          KEY_POWER                0xF00F
+          KEY_SEARCH               0xC837
+          KEY_UP                   0x6897
+          KEY_DOWN                 0xE817
+          KEY_LEFT                 0x906F
+          KEY_RIGHT                0x10EF
+          KEY_MENU                 0xA857
+          KEY_ESC                  0x708F
+          KEY_GREEN                0x08F7
+          KEY_RED                  0x48B7
+          KEY_1                    0x807F
+          KEY_2                    0x40BF
+          KEY_3                    0xC03F
+          KEY_4                    0x20DF
+          KEY_5                    0xA05F
+          KEY_MUTE                 0x28D7
+          KEY_VOLUMEUP             0x30CF
+          KEY_VOLUMEDOWN           0xD02F
+      end codes
+
+end remote

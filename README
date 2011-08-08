@@ -1,0 +1,11 @@
+The blaupunkt-2011.lirc lirc config file is generated using the new-style RC.
+
+The current plan is to write a code generator that will take the LIRC file
+and generate a C file containing the state-machine needed to transmit the
+code contained in the lirc file.
+
+The generator will be somewhat limited in that it will only support the
+SPACE_ENC|CONST_LENGTH type and it will output the baseband signal, so adding
+modulation will be up to the user of the state machine, in my application I'll
+only use the baseband signal, so it doesn't matter to me.
+
