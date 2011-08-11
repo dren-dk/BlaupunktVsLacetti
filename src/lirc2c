@@ -1,0 +1,100 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Data::Dumper;
+use FindBin qw($Script);
+
+die "Syntax: $Script lirc header" unless @ARGV == 2;
+
+my ($lircFile, $hFile) = @ARGV;
+
+my %LISTS = (
+    one=>1,
+    zero=>1,
+    repeat=>1,
+    header=>1,
+);
+
+my %lirc;
+open L, "<$lircFile" or die "Failed to open $lircFile: $!";
+my @section;
+while (my $l = <L>) {
+    $l =~ s/\s+$//;
+    $l =~ s/^\s+//;
+    next if $l =~ /^#/ or !$l;
+
+    my ($key, $value) = split /\s+/, $l, 2;  
+
+    if ($key eq 'begin') {
+	unshift @section, $value;
+
+    } elsif ($key eq 'end') {
+	my $os = shift @section;
+	die "Error end of $value found, but in $os" unless $os eq $value;
+
+    } elsif (@section and my $section = $section[0]) {
+
+	$value = [split(/\s+/, $value)] if $LISTS{$key};
+	    
+	$lirc{$section}{$key} = $value;
+    }
+}
+close L;
+
+my $pfx = uc($lirc{remote}{name});
+$pfx =~ s/[^a-zA-Z0-9]+/_/g;
+my $sym = uc($pfx)."_H";
+
+open H, ">$hFile" or die "Failed to write $hFile: $!";
+
+print H qq'#ifndef $sym
+#define $sym
+
+#include "remote.h"
+';
+
+print H "
+extern const Remote $pfx;
+
+const Remote $pfx = {\n";
+
+sub field {
+    my ($cname, $lname, $doc, $last) = @_;
+    my $comma = $last ? '' : ',';
+    my $aka = $cname ne $lname ? " (aka $lname)" : '';
+    die "Invalid lirc field name: $lname" unless defined $lirc{remote}{$lname};
+    print H "  $lirc{remote}{$lname}$comma\t// $cname$aka $doc\n",  
+}
+
+sub msfield {
+    my ($cname, $doc) = @_;
+    print H "  $lirc{remote}{$cname}[0], $lirc{remote}{$cname}[1], //$cname: $doc\n";
+}
+
+field('gap', 'gap', 'Time between each code start.');
+field('fixedBits', 'pre_data_bits','fixed Bits in each code, max 16.');
+field('fixed', 'pre_data', 'The actual fixed bits.');
+field('bits', 'bits', 'Unique bits in each code, max 16.');
+msfield('header', 'Signal for the header which is sent before every code');
+msfield('one', 'Signal for a binary 1');
+msfield('zero', 'Signal for a binary 0');
+msfield('repeat', 'Signal for a held button');
+field('tailMark','ptrail', 'Tail mark sent after each code', 'last');
+
+print H "};
+
+//Key codes:
+";
+
+for my $name (keys %{$lirc{codes}}) {
+    my $code = $lirc{codes}{$name};
+
+    $name =~ s/KEY_//;
+
+    print H "const unsigned int ${pfx}_$name = $code;\n";
+}
+
+print H "\n#endif\n";
+close H;
+
+#die Dumper \%lirc;
