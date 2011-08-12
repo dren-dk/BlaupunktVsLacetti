@@ -91,7 +91,7 @@ for my $name (keys %{$lirc{codes}}) {
 
     $name =~ s/KEY_//;
 
-    print H "const unsigned int ${pfx}_$name = $code;\n";
+    print H "#define ${pfx}_$name $code\n";
 }
 
 print H "\n#endif\n";
