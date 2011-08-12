@@ -3,7 +3,7 @@
 
 typedef struct {
 
-  unsigned int gap;    // Time between each code start.
+  unsigned long int gap;    // Time between each code start.
   
   unsigned char fixedBits; // fixed Bits in each code, max 16.
   unsigned int fixed;      // The actual fixed bits.
@@ -34,7 +34,7 @@ typedef struct {
 
 typedef struct {
   const Remote *remote;
-  unsigned int code;
+  unsigned char code[4];
   unsigned char state; 
   // 0: Header mark
   // 1: Header space
@@ -45,7 +45,7 @@ typedef struct {
 
   unsigned char codeState;
   unsigned char repeating;
-  unsigned int length;
+  unsigned long int length;
 } RemoteState;
 
 /*

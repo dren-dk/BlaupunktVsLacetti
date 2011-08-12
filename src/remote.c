@@ -2,11 +2,29 @@
 
 void remoteStart(RemoteState *rs, const Remote *remote, unsigned int code) {
   rs->remote = remote;
-  rs->code = code;
   rs->state = 0;
   rs->codeState = 0;
   rs->repeating = 0;
   rs->length = 0;
+
+  for (int i=0;i<4;i++) {
+	  rs->code[i] = 0;
+  }
+
+  int bits = 0;
+  for (int i=rs->remote->fixedBits-1;i>=0;i--) {
+	  if (rs->remote->fixed & (1<<i)) {
+		  rs->code[bits>>3] |= 1<<(bits & 7);
+	  }
+	  bits++;
+  }
+
+  for (int i=rs->remote->bits-1;i>=0;i--) {
+	  if (code & (1<<i)) {
+		  rs->code[bits>>3] |= 1<<(bits & 7);
+	  }
+	  bits++;
+  }
 }
 
 char remoteDone(RemoteState *rs) {
@@ -30,20 +48,11 @@ int remoteCodeSignal(RemoteState *rs) {
 
   char space = rs->codeState & 1;
   char bit   = rs->codeState >> 1;
-  char one;
+  char one   = rs->code[bit>>3] & 1<<(bit & 7);;
 
-  if (bit < rs->remote->fixedBits) {    
-    one = rs->remote->fixed & (1<<(rs->remote->fixedBits-bit-1));
-    rs->codeState++;
-
-  } else {
-    bit -= rs->remote->fixedBits;
-    one = rs->code & (1<<(rs->remote->bits - bit - 1));
-    rs->codeState++;
-
-    if (bit >= rs->remote->bits) {
+  rs->codeState++;
+  if (rs->codeState >= (rs->remote->fixedBits + rs->remote->bits) << 1) {
       rs->state++;
-    }
   }
 
   if (space) {
@@ -94,11 +103,25 @@ int remoteSignal(RemoteState *rs) {
   } else if (rs->state == 3) {
     rs->state++;
     rs->length += rs->remote->tailMark;
+    rs->codeState = 0;
     return rs->remote->tailMark;
     
   } else if (rs->state == 4) {
-    rs->state++;    
-    return -(rs->remote->gap - rs->length);
+
+	if (!rs->codeState) {
+		rs->length = rs->remote->gap-rs->length;
+		rs->codeState = 1;
+	}
+
+	if (rs->length > 32000) {
+		rs->length -= 32000;
+		return -32000;
+
+	} else {
+
+	    rs->state++;
+	    return -rs->length;
+	}
 
   } else {
     // Fail!!!
