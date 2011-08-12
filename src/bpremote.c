@@ -82,6 +82,8 @@ unsigned int getADC(unsigned char input) {
 //    return result;
 }
 
+unsigned int messageThrottle = 0;
+
 unsigned int getCurrentCode() {
 	unsigned int in = getADC(0);
 
@@ -99,7 +101,11 @@ unsigned int getCurrentCode() {
 		}
 	}
 
-	if (bestDist < 50) {
+	if (best != 0 || bestDist >= 10) {
+		fprintf(stdout, "adc:%d code:%d dist:%d\n", in, best, bestDist);
+	}
+
+	if (bestDist < 100) {
 		return best;
 	} else {
 		return 0;

@@ -38,7 +38,7 @@ int remoteRepeatSignal(RemoteState *rs) {
     return rs->remote->repeatMark;
     
   } else  {
-    rs->state++;
+    rs->state = 3;
     rs->length += rs->remote->repeatSpace;
     return -rs->remote->repeatSpace;
   }
@@ -83,9 +83,14 @@ int remoteSignal(RemoteState *rs) {
   } // No else here, because we immediately fall into state 0 to repeat
 
   if (rs->state == 0) {
-    rs->state++;
-    rs->length += rs->remote->headerMark;
-    return rs->remote->headerMark;
+
+	  if (rs->repeating) {
+		  return remoteRepeatSignal(rs);
+	  } else {
+		  rs->state++;
+		  rs->length += rs->remote->headerMark;
+		  return rs->remote->headerMark;
+	  }
 
   } else if (rs->state == 1) {
     rs->state++;
@@ -93,12 +98,7 @@ int remoteSignal(RemoteState *rs) {
     return -rs->remote->headerSpace;
 
   } else if (rs->state == 2) {
-
-    if (rs->repeating) {
-      return remoteRepeatSignal(rs);
-    } else {
       return remoteCodeSignal(rs);
-    }
 
   } else if (rs->state == 3) {
     rs->state++;
