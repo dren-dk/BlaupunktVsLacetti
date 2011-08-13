@@ -1,11 +1,72 @@
 The blaupunkt-2011.lirc lirc config file is generated using the new-style RC.
 
-The current plan is to write a code generator that will take the LIRC file
-and generate a C file containing the state-machine needed to transmit the
-code contained in the lirc file.
+The lirc2c script converts the lirc config file to a c datastructure, which
+can be interpreted into a remote control signal using the remote.c and
+remote.h statemachine.
 
-The generator will be somewhat limited in that it will only support the
-SPACE_ENC|CONST_LENGTH type and it will output the baseband signal, so adding
-modulation will be up to the user of the state machine, in my application I'll
-only use the baseband signal, so it doesn't matter to me.
+See remote-test.c for a simple example of how to pull the mark/space sequence
+out of the statemachine, run make test to see it written out.
 
+The main firmware is in bpremote.c
+
+The generator is somewhat limited in that it will only support the
+SPACE_ENC|CONST_LENGTH type of signal and it will output the baseband
+signal, so adding modulation will be up to the user of the state machine,
+in my application I only use the baseband signal, so it doesn't matter
+to me.
+
+
+The Lacetti steeing wheel is wired up using switches to connect the
+two wires via different resistors:
+Mute: 1k8
+Src:  1k3
+Next: 820 Ohm
+Vol+: 330 Ohm
+Vol-: 0 Ohm
+
+To measure which button is pressed I simply connect one wire to ground and
+the other via a 1k5 resistor to +5V, then use an ADC input to measure
+the voltage.  
+
+
+The schematic is very simple, take one ATMega88 or any other AVR you have on
+hand, then connect the equivalent of these pins:
+
+* 7, 20, 21:   +5V
+* 8, 22:       GND
+* 23 (ADC0):   Pull up using 1k5 and steering wheel remote.
+* 24 (PC1):    RC out to the headunit (C2 pin 11)
+* 1
+
+* 3 (UART TX): Debugging serial out
+
+* 18: MISO  ISP6 pin 1
+* +5V       ISP6 pin 2
+* 19: SCK   ISP6 pin 3
+* 17: MOSI  ISP6 pin 4
+* 1:  Reset ISP6 pin 5
+* GND       ISP6 pin 6
+
+The power supply is a traditional 78L05 with a diode and couple of uF
+on the input to cope with the noisy car power and a couple of 100 nF
+decoupling caps on the regulated side.
+
+You could easily make do with a much smaller AVR than the ATmega88 I
+used, but that was what I had in my bag.
+
+
+Notice that it is very important to cut two wires in the A-block of
+the iso connector before installing a new headunit in a Lacetti or
+you will burn out fuses:
+1: Sub-out GND (is tied to headlight +12V in the car)
+5: Auto-antenna +12V (is tied to GND in the car)
+
+If wire 1 isn't cut your headlight fuse will burn out.
+If wire 5 isn't cut your remote control will not be powered.
+
+
+I've posted some photos of my hardware here:
+https://plus.google.com/105359218037313894224/posts/equoBurzQ89
+
+
+You may use any of the code included here under the GPL license.
